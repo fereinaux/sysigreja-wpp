@@ -1,5 +1,5 @@
 import { AuthenticationState, initAuthCreds, BufferJSON } from "baileys";
-import { getRedisClient } from "../config/redis.config";
+import { getRedisClient } from "../config/redis.config.js";
 
 export class RedisStorageService {
   private redis = getRedisClient();

@@ -1,14 +1,14 @@
 import { Router, Request, Response } from "express";
-import { SessionManager } from "../services/session-manager.service";
-import { MessageSender } from "../services/message-sender.service";
-import { MinioClient } from "../utils/minio.client";
+import { SessionManager } from "../services/session-manager.service.js";
+import { MessageSender } from "../services/message-sender.service.js";
+import { MinioClient } from "../utils/minio.client.js";
 import {
   SendTextRequest,
   SendImageRequest,
   SendAudioRequest,
   SendMessageResponse,
   SessionInfo,
-} from "../types/session.types";
+} from "../types/session.types.js";
 
 export class GatewayController {
   private router: Router;

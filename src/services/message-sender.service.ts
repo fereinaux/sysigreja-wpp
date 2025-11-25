@@ -1,5 +1,5 @@
 import { WASocket, WAMessage } from "baileys";
-import { MinioClient } from "../utils/minio.client";
+import { MinioClient } from "../utils/minio.client.js";
 
 export class MessageSender {
   constructor(private minioClient: MinioClient) {}

@@ -2,12 +2,13 @@
   "name": "whatsapp-gateway",
   "version": "1.0.0",
   "description": "WhatsApp Gateway service using Baileys with Redis storage",
+  "type": "module",
   "main": "dist/server.js",
   "scripts": {
-    "dev": "nodemon --exec ts-node src/server.ts",
+    "dev": "nodemon --exec \"node --loader ts-node/esm\" src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "test:browsers": "ts-node scripts/test-browser-configs.ts"
+    "test:browsers": "node --loader ts-node/esm scripts/test-browser-configs.ts"
   },
   "keywords": [
     "whatsapp",

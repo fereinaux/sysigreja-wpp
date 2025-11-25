@@ -7,8 +7,8 @@ import {
 } from "baileys";
 import { Boom } from "@hapi/boom";
 import pino from "pino";
-import { RedisStorageService } from "../services/redis-storage.service";
-import { convertQRCodeToBase64 } from "../utils/qr-code.util";
+import { RedisStorageService } from "../services/redis-storage.service.js";
+import { convertQRCodeToBase64 } from "../utils/qr-code.util.js";
 
 export interface BaileysConfig {
   userId: string;

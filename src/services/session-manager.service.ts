@@ -1,7 +1,10 @@
 import { WASocket } from "baileys";
-import { createBaileysSocket } from "../config/baileys.config";
-import { RedisStorageService } from "./redis-storage.service";
-import { SessionStatus, CreateSessionResponse } from "../types/session.types";
+import { createBaileysSocket } from "../config/baileys.config.js";
+import { RedisStorageService } from "./redis-storage.service.js";
+import {
+  SessionStatus,
+  CreateSessionResponse,
+} from "../types/session.types.js";
 
 export class SessionManager {
   private sessions: Map<string, WASocket> = new Map();
