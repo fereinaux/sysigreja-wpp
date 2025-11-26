@@ -109,6 +109,50 @@ export class SessionManager {
         },
       });
 
+      // Timeout máximo para conclusão do login (ex: 3 minutos)
+      const maxLoginTimeMs = 3 * 60 * 1000;
+      setTimeout(async () => {
+        try {
+          const statusAfterTimeout = await storage.getStatus();
+          if (
+            statusAfterTimeout === "connecting" ||
+            statusAfterTimeout === "qr_pending"
+          ) {
+            console.log(
+              `[SessionManager] ⏰ Tempo máximo de espera excedido para userId: ${userId} (status atual: ${statusAfterTimeout}). Limpando sessão e encerrando socket.`
+            );
+
+            try {
+              // Encerrar socket se ainda existir em memória
+              const currentSocket = this.sessions.get(userId);
+              if (currentSocket) {
+                await currentSocket.end(undefined);
+                this.sessions.delete(userId);
+              }
+            } catch (err) {
+              console.error(
+                `[SessionManager] ❌ Erro ao encerrar socket no timeout para userId: ${userId}:`,
+                err
+              );
+            }
+
+            // Limpar QR e estado de autenticação para forçar novo fluxo limpo
+            await storage.deleteQRCode();
+            await storage.clearState();
+            await storage.setStatus("disconnected");
+
+            console.log(
+              `[SessionManager] ✅ Sessão limpa após timeout para userId: ${userId}`
+            );
+          }
+        } catch (err) {
+          console.error(
+            `[SessionManager] ❌ Erro ao executar lógica de timeout para userId: ${userId}:`,
+            err
+          );
+        }
+      }, maxLoginTimeMs);
+
       console.log(
         `[SessionManager] ⏳ Aguardando QR Code ser gerado (timeout: 10s) para userId: ${userId}`
       );
