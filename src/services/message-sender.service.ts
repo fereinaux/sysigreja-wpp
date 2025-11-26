@@ -5,18 +5,6 @@ export class MessageSender {
   constructor(private minioClient: MinioClient) {}
 
   /**
-   * Verifica se o socket está realmente conectado
-   */
-  private isSocketConnected(socket: WASocket): boolean {
-    try {
-      // Verificar se o socket tem a propriedade user (indica conexão ativa)
-      return !!(socket as any).user;
-    } catch {
-      return false;
-    }
-  }
-
-  /**
    * Envia mensagem de texto
    */
   async sendText(
@@ -31,15 +19,6 @@ export class MessageSender {
         message.length > 50 ? "..." : ""
       }`
     );
-
-    // Verificar se o socket está realmente conectado
-    if (!this.isSocketConnected(socket)) {
-      console.error(`[MessageSender] ❌ Socket não está conectado`);
-      throw new Error(
-        "Socket não está conectado. Por favor, reconecte a sessão."
-      );
-    }
-    console.log(`[MessageSender] ✅ Socket verificado como conectado`);
 
     const jid = this.formatJid(to);
     console.log(`[MessageSender] 🔗 JID formatado: ${jid}`);
@@ -82,15 +61,6 @@ export class MessageSender {
     console.log(`[MessageSender] 📋 Destinatário: ${to}`);
     console.log(`[MessageSender] 🖼️  Image Key: ${imageKey}`);
     console.log(`[MessageSender] 💬 Legenda: ${caption || "(sem legenda)"}`);
-
-    // Verificar se o socket está realmente conectado
-    if (!this.isSocketConnected(socket)) {
-      console.error(`[MessageSender] ❌ Socket não está conectado`);
-      throw new Error(
-        "Socket não está conectado. Por favor, reconecte a sessão."
-      );
-    }
-    console.log(`[MessageSender] ✅ Socket verificado como conectado`);
 
     const jid = this.formatJid(to);
     console.log(`[MessageSender] 🔗 JID formatado: ${jid}`);
@@ -152,15 +122,6 @@ export class MessageSender {
     console.log(`[MessageSender] 📤 Iniciando envio de áudio`);
     console.log(`[MessageSender] 📋 Destinatário: ${to}`);
     console.log(`[MessageSender] 🎵 Audio Key: ${audioKey}`);
-
-    // Verificar se o socket está realmente conectado
-    if (!this.isSocketConnected(socket)) {
-      console.error(`[MessageSender] ❌ Socket não está conectado`);
-      throw new Error(
-        "Socket não está conectado. Por favor, reconecte a sessão."
-      );
-    }
-    console.log(`[MessageSender] ✅ Socket verificado como conectado`);
 
     const jid = this.formatJid(to);
     console.log(`[MessageSender] 🔗 JID formatado: ${jid}`);
