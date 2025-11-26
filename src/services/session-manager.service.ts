@@ -213,15 +213,79 @@ export class SessionManager {
   }
 
   /**
+   * Verifica se o socket está realmente conectado
+   */
+  private isSocketConnected(socket: WASocket): boolean {
+    try {
+      // Verificar se o socket tem a propriedade user (indica conexão ativa)
+      // No Baileys, quando conectado, o socket tem a propriedade user
+      const hasUser = !!(socket as any).user;
+      
+      // Verificar se o socket não foi destruído
+      const isDestroyed = (socket as any).ws?.readyState === 3; // WebSocket.CLOSED
+      
+      // Socket está conectado se tem user e não foi destruído
+      return hasUser && !isDestroyed;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
    * Obtém o socket da sessão do usuário
    *
    * Observação importante:
    * - Se o processo foi reiniciado, o Redis pode dizer "connected" mas o Map
    *   em memória não terá o socket. Nesses casos, esta função retornará null
    *   e o caller deve tratar a sessão como desconectada e iniciar um novo fluxo.
+   * - Se o socket existe mas não está realmente conectado, remove do Map e retorna null
    */
   getSession(userId: string): WASocket | null {
-    return this.sessions.get(userId) || null;
+    const socket = this.sessions.get(userId);
+    if (!socket) {
+      return null;
+    }
+
+    // Verificar se o socket está realmente conectado
+    if (!this.isSocketConnected(socket)) {
+      console.log(
+        `[SessionManager] ⚠️  Socket encontrado mas não está conectado para userId: ${userId}. Removendo do Map.`
+      );
+      this.sessions.delete(userId);
+      const storage = this.getStorage(userId);
+      storage.setStatus("disconnected").catch((err) => {
+        console.error(
+          `[SessionManager] ❌ Erro ao atualizar status para disconnected:`,
+          err
+        );
+      });
+      return null;
+    }
+
+    return socket;
+  }
+
+  /**
+   * Limpa a sessão quando ocorre erro de conexão (ex: 428)
+   */
+  async clearSessionOnError(userId: string): Promise<void> {
+    console.log(
+      `[SessionManager] 🧹 Limpando sessão após erro para userId: ${userId}`
+    );
+    const socket = this.sessions.get(userId);
+    if (socket) {
+      try {
+        this.sessions.delete(userId);
+      } catch (err) {
+        console.error(
+          `[SessionManager] ❌ Erro ao remover socket do Map:`,
+          err
+        );
+      }
+    }
+
+    const storage = this.getStorage(userId);
+    await storage.setStatus("disconnected");
   }
 
   /**

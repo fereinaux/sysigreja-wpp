@@ -23,3 +23,4 @@ EXPOSE 3001
 # Comando para iniciar o serviço
 CMD ["npm", "start"]
 
+

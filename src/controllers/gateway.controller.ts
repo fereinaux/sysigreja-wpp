@@ -97,9 +97,8 @@ export class GatewayController {
 
     // Enviar texto
     this.router.post("/send-text", async (req: Request, res: Response) => {
+      const { sessionUserId, to, message }: SendTextRequest = req.body;
       try {
-        const { sessionUserId, to, message }: SendTextRequest = req.body;
-
         console.log(
           `[Gateway] 📨 Recebida requisição para enviar mensagem de texto`
         );
@@ -158,6 +157,11 @@ export class GatewayController {
 
         // Tratamento específico para erro 428 (Connection Closed)
         if (error?.output?.statusCode === 428) {
+          console.log(
+            `[Gateway] 🔴 Erro 428 detectado - limpando sessão para userId: ${sessionUserId}`
+          );
+          // Limpar sessão quando receber erro 428
+          await this.sessionManager.clearSessionOnError(sessionUserId);
           return res.status(428).json({
             success: false,
             error: "Conexão fechada. Por favor, reconecte a sessão.",
@@ -173,10 +177,9 @@ export class GatewayController {
 
     // Enviar imagem
     this.router.post("/send-image", async (req: Request, res: Response) => {
+      const { sessionUserId, to, imageKey, caption }: SendImageRequest =
+        req.body;
       try {
-        const { sessionUserId, to, imageKey, caption }: SendImageRequest =
-          req.body;
-
         console.log(`[Gateway] 📨 Recebida requisição para enviar imagem`);
         console.log(`[Gateway] 👤 Session User ID: ${sessionUserId}`);
         console.log(`[Gateway] 📱 Destinatário: ${to}`);
@@ -239,6 +242,11 @@ export class GatewayController {
 
         // Tratamento específico para erro 428 (Connection Closed)
         if (error?.output?.statusCode === 428) {
+          console.log(
+            `[Gateway] 🔴 Erro 428 detectado - limpando sessão para userId: ${sessionUserId}`
+          );
+          // Limpar sessão quando receber erro 428
+          await this.sessionManager.clearSessionOnError(sessionUserId);
           return res.status(428).json({
             success: false,
             error: "Conexão fechada. Por favor, reconecte a sessão.",
@@ -254,9 +262,8 @@ export class GatewayController {
 
     // Enviar áudio
     this.router.post("/send-audio", async (req: Request, res: Response) => {
+      const { sessionUserId, to, audioKey }: SendAudioRequest = req.body;
       try {
-        const { sessionUserId, to, audioKey }: SendAudioRequest = req.body;
-
         console.log(`[Gateway] 📨 Recebida requisição para enviar áudio`);
         console.log(`[Gateway] 👤 Session User ID: ${sessionUserId}`);
         console.log(`[Gateway] 📱 Destinatário: ${to}`);
@@ -314,6 +321,11 @@ export class GatewayController {
 
         // Tratamento específico para erro 428 (Connection Closed)
         if (error?.output?.statusCode === 428) {
+          console.log(
+            `[Gateway] 🔴 Erro 428 detectado - limpando sessão para userId: ${sessionUserId}`
+          );
+          // Limpar sessão quando receber erro 428
+          await this.sessionManager.clearSessionOnError(sessionUserId);
           return res.status(428).json({
             success: false,
             error: "Conexão fechada. Por favor, reconecte a sessão.",

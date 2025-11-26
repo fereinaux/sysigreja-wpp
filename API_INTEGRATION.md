@@ -802,3 +802,4 @@ Para dúvidas ou problemas, verifique:
 - Status da sessão via `GET /sessions/:userId/status`
 - Health check via `GET /health`
 
+
