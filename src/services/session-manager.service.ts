@@ -170,69 +170,14 @@ export class SessionManager {
 
   /**
    * Obtém o socket da sessão do usuário
-   * Se o status está "connected" mas o socket não está no Map, tenta recriar a conexão
+   *
+   * Observação importante:
+   * - Se o processo foi reiniciado, o Redis pode dizer "connected" mas o Map
+   *   em memória não terá o socket. Nesses casos, esta função retornará null
+   *   e o caller deve tratar a sessão como desconectada e iniciar um novo fluxo.
    */
-  async getSession(userId: string): Promise<WASocket | null> {
-    let socket = this.sessions.get(userId) || null;
-
-    // Se não há socket mas o status está "connected", tentar recriar a conexão
-    if (!socket) {
-      const status = await this.getSessionStatus(userId);
-      if (status === "connected") {
-        console.log(
-          `[SessionManager] ⚠️  Socket não encontrado no Map mas status é 'connected' para userId: ${userId}`
-        );
-        console.log(
-          `[SessionManager] 🔄 Tentando recriar conexão para userId: ${userId}`
-        );
-        try {
-          // Recriar a conexão silenciosamente
-          const { socket: newSocket } = await createBaileysSocket({
-            userId,
-            onConnectionUpdate: async (update) => {
-              if (update.connection === "open") {
-                console.log(
-                  `[SessionManager] ✅ Conexão recriada com sucesso para userId: ${userId}`
-                );
-                this.sessions.set(userId, newSocket);
-                const storage = this.getStorage(userId);
-                await storage.setStatus("connected");
-              } else if (update.connection === "close") {
-                console.log(
-                  `[SessionManager] 🔴 Conexão recriada foi fechada para userId: ${userId}`
-                );
-                this.sessions.delete(userId);
-                const storage = this.getStorage(userId);
-                await storage.setStatus("disconnected");
-              }
-            },
-          });
-
-          // Aguardar um pouco para ver se a conexão abre (se já estava autenticada)
-          await new Promise((resolve) => setTimeout(resolve, 2000));
-
-          // Verificar se a conexão foi estabelecida
-          const currentStatus = await this.getSessionStatus(userId);
-          if (currentStatus === "connected" && this.sessions.has(userId)) {
-            socket = this.sessions.get(userId) || null;
-            console.log(
-              `[SessionManager] ✅ Socket recriado e conectado para userId: ${userId}`
-            );
-          } else {
-            console.log(
-              `[SessionManager] ⚠️  Não foi possível recriar conexão para userId: ${userId}. Status atual: ${currentStatus}`
-            );
-          }
-        } catch (error) {
-          console.error(
-            `[SessionManager] ❌ Erro ao tentar recriar conexão para userId: ${userId}:`,
-            error
-          );
-        }
-      }
-    }
-
-    return socket;
+  getSession(userId: string): WASocket | null {
+    return this.sessions.get(userId) || null;
   }
 
   /**
@@ -249,6 +194,18 @@ export class SessionManager {
     const socket = this.sessions.get(userId);
     if (socket && status === "connected") {
       return "connected";
+    }
+
+    // Caso especial: Redis diz "connected" mas não há socket em memória.
+    // Isso geralmente acontece após restart do processo. Nesse cenário,
+    // consideramos a sessão como desconectada para forçar um novo fluxo
+    // de conexão (novo QR code) e evitar estados zumbis.
+    if (!socket && status === "connected") {
+      console.log(
+        `[SessionManager] ⚠️  Status em Redis é 'connected' mas não há socket em memória para userId: ${userId}. Marcando como 'disconnected'.`
+      );
+      await storage.setStatus("disconnected");
+      return "disconnected";
     }
 
     const qr = await storage.getQRCode();
