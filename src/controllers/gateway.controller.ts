@@ -32,8 +32,7 @@ export class GatewayController {
           console.log(`[Gateway] 📱 Criando sessão para userId: ${userId}`);
           const result = await this.sessionManager.createSession(userId);
           console.log(
-            `[Gateway] ✅ Sessão criada - Status: ${
-              result.status
+            `[Gateway] ✅ Sessão criada - Status: ${result.status
             }, QR gerado: ${result.qr ? "Sim" : "Não"}`
           );
           res.json(result);
@@ -61,8 +60,7 @@ export class GatewayController {
           };
 
           console.log(
-            `[Gateway] 📊 Status da sessão ${userId}: ${status}, QR disponível: ${
-              qr ? "Sim" : "Não"
+            `[Gateway] 📊 Status da sessão ${userId}: ${status}, QR disponível: ${qr ? "Sim" : "Não"
             }`
           );
           res.json(response);
@@ -111,25 +109,15 @@ export class GatewayController {
           });
         }
 
-        // Verificar status da sessão antes de enviar
-        const status = await this.sessionManager.getSessionStatus(
-          sessionUserId
-        );
-        console.log(`[Gateway] 📊 Status da sessão: ${status}`);
-
-        if (status !== "connected") {
-          console.error(
-            `[Gateway] ❌ Sessão não está conectada. Status: ${status}`
-          );
-          return res.status(404).json({
-            error: `Sessão não conectada. Status atual: ${status}`,
-          });
-        }
-
+        // Obter socket diretamente - getSession() já verifica se está conectado
         const socket = await this.sessionManager.getSession(sessionUserId);
         if (!socket) {
+          // Verificar status para retornar mensagem mais específica
+          const status = await this.sessionManager.getSessionStatus(
+            sessionUserId
+          );
           console.error(
-            `[Gateway] ❌ Socket não encontrado para userId: ${sessionUserId}`
+            `[Gateway] ❌ Socket não encontrado ou não conectado para userId: ${sessionUserId}, status: ${status}`
           );
           return res.status(404).json({
             error:
@@ -137,7 +125,7 @@ export class GatewayController {
           });
         }
 
-        console.log(`[Gateway] ✅ Socket encontrado, enviando mensagem...`);
+        console.log(`[Gateway] ✅ Socket conectado e válido para userId: ${sessionUserId}`);
         const result = await this.messageSender.sendText(socket, to, message);
         const response: SendMessageResponse = {
           success: true,
@@ -191,25 +179,15 @@ export class GatewayController {
           });
         }
 
-        // Verificar status da sessão antes de enviar
-        const status = await this.sessionManager.getSessionStatus(
-          sessionUserId
-        );
-        console.log(`[Gateway] 📊 Status da sessão: ${status}`);
-
-        if (status !== "connected") {
-          console.error(
-            `[Gateway] ❌ Sessão não está conectada. Status: ${status}`
-          );
-          return res.status(404).json({
-            error: `Sessão não conectada. Status atual: ${status}`,
-          });
-        }
-
+        // Obter socket diretamente - getSession() já verifica se está conectado
         const socket = await this.sessionManager.getSession(sessionUserId);
         if (!socket) {
+          // Verificar status para retornar mensagem mais específica
+          const status = await this.sessionManager.getSessionStatus(
+            sessionUserId
+          );
           console.error(
-            `[Gateway] ❌ Socket não encontrado para userId: ${sessionUserId}`
+            `[Gateway] ❌ Socket não encontrado ou não conectado para userId: ${sessionUserId}, status: ${status}`
           );
           return res.status(404).json({
             error:
@@ -217,7 +195,7 @@ export class GatewayController {
           });
         }
 
-        console.log(`[Gateway] ✅ Socket encontrado, enviando imagem...`);
+        console.log(`[Gateway] ✅ Socket conectado e válido, enviando imagem...`);
         const result = await this.messageSender.sendImage(
           socket,
           to,
@@ -275,25 +253,15 @@ export class GatewayController {
           });
         }
 
-        // Verificar status da sessão antes de enviar
-        const status = await this.sessionManager.getSessionStatus(
-          sessionUserId
-        );
-        console.log(`[Gateway] 📊 Status da sessão: ${status}`);
-
-        if (status !== "connected") {
-          console.error(
-            `[Gateway] ❌ Sessão não está conectada. Status: ${status}`
-          );
-          return res.status(404).json({
-            error: `Sessão não conectada. Status atual: ${status}`,
-          });
-        }
-
+        // Obter socket diretamente - getSession() já verifica se está conectado
         const socket = await this.sessionManager.getSession(sessionUserId);
         if (!socket) {
+          // Verificar status para retornar mensagem mais específica
+          const status = await this.sessionManager.getSessionStatus(
+            sessionUserId
+          );
           console.error(
-            `[Gateway] ❌ Socket não encontrado para userId: ${sessionUserId}`
+            `[Gateway] ❌ Socket não encontrado ou não conectado para userId: ${sessionUserId}, status: ${status}`
           );
           return res.status(404).json({
             error:
@@ -301,7 +269,7 @@ export class GatewayController {
           });
         }
 
-        console.log(`[Gateway] ✅ Socket encontrado, enviando áudio...`);
+        console.log(`[Gateway] ✅ Socket conectado e válido, enviando áudio...`);
         const result = await this.messageSender.sendAudio(socket, to, audioKey);
         const response: SendMessageResponse = {
           success: true,

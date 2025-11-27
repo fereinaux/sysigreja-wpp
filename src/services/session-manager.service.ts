@@ -220,10 +220,10 @@ export class SessionManager {
       // Verificar se o socket tem a propriedade user (indica conexão ativa)
       // No Baileys, quando conectado, o socket tem a propriedade user
       const hasUser = !!(socket as any).user;
-      
+
       // Verificar se o socket não foi destruído
       const isDestroyed = (socket as any).ws?.readyState === 3; // WebSocket.CLOSED
-      
+
       // Socket está conectado se tem user e não foi destruído
       return hasUser && !isDestroyed;
     } catch {
@@ -300,8 +300,21 @@ export class SessionManager {
     }
 
     const socket = this.sessions.get(userId);
+
+    // Verificar se o socket existe E está realmente conectado
     if (socket && status === "connected") {
-      return "connected";
+      // Verificar se o socket está realmente conectado (não apenas existe no Map)
+      if (this.isSocketConnected(socket)) {
+        return "connected";
+      } else {
+        // Socket existe mas não está conectado - limpar estado
+        console.log(
+          `[SessionManager] ⚠️  Socket existe mas não está conectado para userId: ${userId}. Limpando estado.`
+        );
+        this.sessions.delete(userId);
+        await storage.setStatus("disconnected");
+        return "disconnected";
+      }
     }
 
     // Caso especial: Redis diz "connected" mas não há socket em memória.
