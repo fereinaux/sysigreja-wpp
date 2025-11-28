@@ -221,11 +221,13 @@ export class SessionManager {
       // No Baileys, quando conectado, o socket tem a propriedade user
       const hasUser = !!(socket as any).user;
 
-      // Verificar se o socket não foi destruído
-      const isDestroyed = (socket as any).ws?.readyState === 3; // WebSocket.CLOSED
+      // Verificar o estado do WebSocket
+      // WebSocket.OPEN = 1, WebSocket.CONNECTING = 0, WebSocket.CLOSING = 2, WebSocket.CLOSED = 3
+      const wsReadyState = (socket as any).ws?.readyState;
+      const isOpen = wsReadyState === 1; // WebSocket.OPEN
 
-      // Socket está conectado se tem user e não foi destruído
-      return hasUser && !isDestroyed;
+      // Socket está conectado se tem user E WebSocket está em estado OPEN
+      return hasUser && isOpen;
     } catch {
       return false;
     }
@@ -259,6 +261,32 @@ export class SessionManager {
           err
         );
       });
+      return null;
+    }
+
+    return socket;
+  }
+
+  /**
+   * Obtém e valida o socket imediatamente antes do uso
+   * Esta função faz uma verificação dupla para evitar condições de corrida
+   */
+  async getAndValidateSession(userId: string): Promise<WASocket | null> {
+    // Primeira verificação
+    let socket = this.getSession(userId);
+    if (!socket) {
+      return null;
+    }
+
+    // Verificação adicional imediatamente antes de retornar
+    // Isso reduz a janela de tempo para condições de corrida
+    if (!this.isSocketConnected(socket)) {
+      console.log(
+        `[SessionManager] ⚠️  Socket desconectou entre verificações para userId: ${userId}. Removendo do Map.`
+      );
+      this.sessions.delete(userId);
+      const storage = this.getStorage(userId);
+      await storage.setStatus("disconnected");
       return null;
     }
 

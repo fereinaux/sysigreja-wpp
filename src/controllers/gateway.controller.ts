@@ -109,8 +109,8 @@ export class GatewayController {
           });
         }
 
-        // Obter socket diretamente - getSession() já verifica se está conectado
-        const socket = await this.sessionManager.getSession(sessionUserId);
+        // Obter e validar socket - verificação dupla para evitar condições de corrida
+        const socket = await this.sessionManager.getAndValidateSession(sessionUserId);
         if (!socket) {
           // Verificar status para retornar mensagem mais específica
           const status = await this.sessionManager.getSessionStatus(
@@ -143,12 +143,21 @@ export class GatewayController {
           error: error?.output?.payload,
         });
 
-        // Tratamento específico para erro 428 (Connection Closed)
-        if (error?.output?.statusCode === 428) {
+        // Verificar se é erro de conexão (428 ou outros códigos relacionados)
+        const statusCode = error?.output?.statusCode;
+        const isConnectionError =
+          statusCode === 428 || // Connection Closed
+          statusCode === 401 || // Unauthorized
+          statusCode === 403 || // Forbidden
+          error?.message?.toLowerCase().includes('connection') ||
+          error?.message?.toLowerCase().includes('socket') ||
+          error?.message?.toLowerCase().includes('disconnected');
+
+        if (isConnectionError) {
           console.log(
-            `[Gateway] 🔴 Erro 428 detectado - limpando sessão para userId: ${sessionUserId}`
+            `[Gateway] 🔴 Erro de conexão detectado (${statusCode || 'unknown'}) - limpando sessão para userId: ${sessionUserId}`
           );
-          // Limpar sessão quando receber erro 428
+          // Limpar sessão quando receber erro de conexão
           await this.sessionManager.clearSessionOnError(sessionUserId);
           return res.status(428).json({
             success: false,
@@ -179,8 +188,8 @@ export class GatewayController {
           });
         }
 
-        // Obter socket diretamente - getSession() já verifica se está conectado
-        const socket = await this.sessionManager.getSession(sessionUserId);
+        // Obter e validar socket - verificação dupla para evitar condições de corrida
+        const socket = await this.sessionManager.getAndValidateSession(sessionUserId);
         if (!socket) {
           // Verificar status para retornar mensagem mais específica
           const status = await this.sessionManager.getSessionStatus(
@@ -218,12 +227,21 @@ export class GatewayController {
           error: error?.output?.payload,
         });
 
-        // Tratamento específico para erro 428 (Connection Closed)
-        if (error?.output?.statusCode === 428) {
+        // Verificar se é erro de conexão (428 ou outros códigos relacionados)
+        const statusCode = error?.output?.statusCode;
+        const isConnectionError =
+          statusCode === 428 || // Connection Closed
+          statusCode === 401 || // Unauthorized
+          statusCode === 403 || // Forbidden
+          error?.message?.toLowerCase().includes('connection') ||
+          error?.message?.toLowerCase().includes('socket') ||
+          error?.message?.toLowerCase().includes('disconnected');
+
+        if (isConnectionError) {
           console.log(
-            `[Gateway] 🔴 Erro 428 detectado - limpando sessão para userId: ${sessionUserId}`
+            `[Gateway] 🔴 Erro de conexão detectado (${statusCode || 'unknown'}) - limpando sessão para userId: ${sessionUserId}`
           );
-          // Limpar sessão quando receber erro 428
+          // Limpar sessão quando receber erro de conexão
           await this.sessionManager.clearSessionOnError(sessionUserId);
           return res.status(428).json({
             success: false,
@@ -253,8 +271,8 @@ export class GatewayController {
           });
         }
 
-        // Obter socket diretamente - getSession() já verifica se está conectado
-        const socket = await this.sessionManager.getSession(sessionUserId);
+        // Obter e validar socket - verificação dupla para evitar condições de corrida
+        const socket = await this.sessionManager.getAndValidateSession(sessionUserId);
         if (!socket) {
           // Verificar status para retornar mensagem mais específica
           const status = await this.sessionManager.getSessionStatus(
@@ -287,12 +305,21 @@ export class GatewayController {
           error: error?.output?.payload,
         });
 
-        // Tratamento específico para erro 428 (Connection Closed)
-        if (error?.output?.statusCode === 428) {
+        // Verificar se é erro de conexão (428 ou outros códigos relacionados)
+        const statusCode = error?.output?.statusCode;
+        const isConnectionError =
+          statusCode === 428 || // Connection Closed
+          statusCode === 401 || // Unauthorized
+          statusCode === 403 || // Forbidden
+          error?.message?.toLowerCase().includes('connection') ||
+          error?.message?.toLowerCase().includes('socket') ||
+          error?.message?.toLowerCase().includes('disconnected');
+
+        if (isConnectionError) {
           console.log(
-            `[Gateway] 🔴 Erro 428 detectado - limpando sessão para userId: ${sessionUserId}`
+            `[Gateway] 🔴 Erro de conexão detectado (${statusCode || 'unknown'}) - limpando sessão para userId: ${sessionUserId}`
           );
-          // Limpar sessão quando receber erro 428
+          // Limpar sessão quando receber erro de conexão
           await this.sessionManager.clearSessionOnError(sessionUserId);
           return res.status(428).json({
             success: false,
